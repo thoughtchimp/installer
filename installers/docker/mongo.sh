@@ -46,6 +46,10 @@ function createDatabase() {
 
 # MongoDB Initialization
 function createMongoContainer() {
+	if [ "${DATABASE}" == "true" ]; then
+		sudo rm -rf ${MONGODB_PATH}/${MONGO_NAME}
+	fi
+
 	sudo docker run -d --name $DOCKER_NAME -p $PORT:27017 -v ${MONGODB_PATH}/${MONGO_NAME}:/data/db mongo --auth
 	admin_username=$(get_input "" "Enter admin's username (default admin): " "admin")
 	admin_password=$(get_input "" "Enter admin's password (default adminPass): " "adminPass")
@@ -61,7 +65,7 @@ function createMongoContainer() {
 # Parsing commandline args
 while getopts "s:p:d" opt; do
     case "${opt}" in
-        s)  SWAP_MEM=$OPTARG
+        s)  createSwap $OPTARG
         ;;
         p)  PORT=$OPTARG
         ;;
@@ -69,12 +73,6 @@ while getopts "s:p:d" opt; do
         ;;
     esac
 done
-
-if [[ $SWAP_MEM =~ ^[0-9]+$ ]]; then
-	createSwap $SWAP_MEM
-else
-	echo "Please enter an integer for SWAP Memory"
-fi
 
 if [[ $PORT =~ ^[0-9]+$ ]]; then
 	createMongoContainer

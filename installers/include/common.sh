@@ -7,8 +7,8 @@ function setLocale() {
 		sudo apt-get -qq update
 		echo "Fixing locale"
 		sudo locale-gen ${1}
-		export LANGUAGE="${1}"
-		export LC_ALL="${1}"
+		export LANGUAGE=${1}
+		export LC_ALL=${1}
 		sudo dpkg-reconfigure -p critical locales
 		echo -e "LANGUAGE=\"${1}\"\nLC_ALL=\"${1}\"\n" | sudo bash -c 'tee >> /etc/environment'
 	else
@@ -63,16 +63,20 @@ function in_array() {
 
 # Create Swap Memory
 function createSwap() {
-  if free | awk '/^Swap:/ {exit !$2}'; then
-      echo "Have swap"
-  else
-      sudo fallocate -l ${1}G ~/swapfile
-      sudo chmod 600 ~/swapfile
-      sudo mkswap ~/swapfile
-      sudo swapon ~/swapfile
-      sudo cp /etc/fstab /etc/fstab.bak
-      echo '~/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
-  fi
+	if ! [[ ${1} =~ ^[0-9]+$ ]]; then
+		echo "Please enter an integer for SWAP Memory"
+	else
+		if free | awk '/^Swap:/ {exit !$2}'; then
+			echo "Have swap"
+		else
+			sudo fallocate -l ${1}G ~/swapfile
+			sudo chmod 600 ~/swapfile
+			sudo mkswap ~/swapfile
+			sudo swapon ~/swapfile
+			sudo cp /etc/fstab /etc/fstab.bak
+			echo '~/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+		fi
+	fi
 }
 
 # Installing Docker
