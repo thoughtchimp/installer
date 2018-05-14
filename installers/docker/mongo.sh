@@ -17,7 +17,6 @@ source ${INCLUDE_DIR}/common.sh
 
 : ${PORT:=27017}
 : ${MONGODB_PATH:=~/mongo-data}
-: ${SWAP_MEM:=1}
 
 [[ -d ${MONGODB_PATH} ]] || mkdir ${MONGODB_PATH}
 
@@ -30,55 +29,11 @@ fi
 
 echo ${DOCKER_NAME}
 
-# Fixing Locale
-if ! locale | grep LANGUAGE > "en_US.UTF-8"; then
-	sudo apt-add-repository -y ppa:git-core/ppa
-	sudo apt-get -qq update
-	echo "Fixing locale"
-	sudo locale-gen en_US.UTF-8
-	export LANGUAGE="en_US.UTF-8"
-	export LC_ALL="en_US.UTF-8"
-	sudo dpkg-reconfigure -p critical locales
-	echo -e 'LANGUAGE="en_US.UTF-8"\nLC_ALL="en_US.UTF-8"\n' | sudo bash -c 'tee >> /etc/environment'
-else
-	echo "Locale already set"
-fi
+# Set Locale
+setLocale "en_US.UTF-8"
 
-# Checking Docker Compose
-if ! command -v docker-compose > /dev/null; then
-	echo "Installing Docker Compose"
-	sudo curl -L https://github.com/docker/compose/releases/download/1.18.0/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose
-	sudo chmod +x /usr/local/bin/docker-compose
-else
-	echo "Docker Composer already Installed"
-fi
-
-# Checking Docker
-if ! command -v docker > /dev/null; then
-	echo "Installing Docker"
-	curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-	sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
-	sudo apt-get -qq update
-	apt-cache policy docker-ce
-	sudo apt-get -qq install -y docker-ce
-	sudo usermod -a -G docker $USER
-else
-	echo "Docker already Installed"
-fi
-
-# Create Swap Memory
-function createSwap() {
-  if free | awk '/^Swap:/ {exit !$2}'; then
-      echo "Have swap"
-  else
-      sudo fallocate -l ${SWAP_MEM}G ~/swapfile
-      sudo chmod 600 ~/swapfile
-      sudo mkswap ~/swapfile
-      sudo swapon ~/swapfile
-      sudo cp /etc/fstab /etc/fstab.bak
-      echo '~/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
-  fi
-}
+#Install Docker
+installDocker
 
 # Create Database MongoDB
 function createDatabase() {
@@ -117,10 +72,10 @@ while getopts "s:p:d" opt; do
     esac
 done
 
-if [[ $SWAPMEM =~ ^[0-9]+$ ]]; then
-	createSwap
+if [[ $SWAP_MEM =~ ^[0-9]+$ ]]; then
+	createSwap $SWAP_MEM
 else
-	echo "Please pass a valid Port to be configured"
+	echo "Please enter an integer for SWAP Memory"
 fi
 
 if [[ $PORT =~ ^[0-9]+$ ]]; then
