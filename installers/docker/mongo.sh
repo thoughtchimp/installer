@@ -1,6 +1,6 @@
 #!/bin/bash
 
-INSTALLERS_DIR=$(dirname $(dirname ${0}))
+INSTALLERS_DIR=$(dirname $(dirname $(realpath ${0})))
 INCLUDE_DIR=./include
 
 if [ -d ${INSTALLERS_DIR}/include ]; then
@@ -26,8 +26,6 @@ MONGO_NAME=$(req_input "Enter container name (default "${RANDOM_ID}"): " ${RANDO
 if ! [ ${DOCKER_NAME} ]; then
 	DOCKER_NAME=mongodb_${MONGO_NAME}
 fi
-
-echo ${DOCKER_NAME}
 
 # Set Locale
 setLocale "en_US.UTF-8"
